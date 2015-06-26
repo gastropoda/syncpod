@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DOWNLOAD_PATH="$HOME/Podcasts"
-MOUNT_POINT="/media/artm/ROCKBOX_4G"
+MOUNT_POINT="/media/$USER/ROCKBOX_4G"
 PLAYLIST="$MOUNT_POINT/Playlists/podcasts.m3u"
 TARGET_PATH="$MOUNT_POINT/PODCASTS"
 ELBOW_ROOM=100 # 1K-blocks to keep spare
