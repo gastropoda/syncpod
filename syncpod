@@ -1,11 +1,22 @@
 #!/bin/bash
 
+# Config
+# ======
+# Where new podcast episodes can be found
 DOWNLOAD_PATH="$HOME/Podcasts"
+# Where the player will be mounted
 MOUNT_POINT="/media/$USER/ROCKBOX_4G"
+# Playlist, also used to detect files deleted on the player
 PLAYLIST="$MOUNT_POINT/Playlists/podcasts.m3u"
-TARGET_PATH="$MOUNT_POINT/PODCASTS"
-ELBOW_ROOM=100 # 1K-blocks to keep spare
+# Where to put podcasts relative to the MOUNT_POINT
+PODCASTS_ROOT="PODCASTS"
+# 1K-blocks to keep spare for player operation
+ELBOW_ROOM=100
 
+# "private" variables
+# ===================
+TARGET_PATH="$MOUNT_POINT/$PODCASTS_ROOT"
+# Field separator for `list_tracks()`
 IFS=$'\t'
 
 check_if_mounted() {
@@ -18,7 +29,7 @@ check_if_mounted() {
 delete_deleted() {
   echo "Searching and destroying the episodes deleted on the player"
   cat "$PLAYLIST" | while read relative ; do
-    relative=${relative/\/PODCASTS\//}
+    relative=${relative#/$PODCASTS_ROOT/}
     if [ ! -f "$TARGET_PATH/$relative" -a -f "$DOWNLOAD_PATH/$relative" ] ; then
       echo " [-] $relative"
       rm "$DOWNLOAD_PATH/$relative"
@@ -27,7 +38,7 @@ delete_deleted() {
 }
 
 list_tracks() {
-  find "$1" \( -name "*.mp3" -or -name "*.ogg" \) -printf "%TY-%Tm-%Td %TH:%TM\t%k\t%P\n" | sort
+  find "$1" \( -name "*.mp3" -or -name "*.ogg" \) -printf "%TY-%Tm-%Td %TH:%TM${IFS}%k${IFS}%P\n" | sort
 }
 
 copy_downloaded() {
@@ -40,6 +51,7 @@ copy_downloaded() {
       if [[ $avail -gt $size ]] ; then
         from="$DOWNLOAD_PATH/$path"
         echo " [+] $path"
+        mkdir -p $(dirname $to)
         cp "$from" "$to"
         avail=$((avail - size))
       else
@@ -51,7 +63,9 @@ copy_downloaded() {
 
 update_playlist() {
   echo "Updating the playlist"
-  list_tracks "$TARGET_PATH" | awk -F "$IFS" '{print "/PODCASTS/" $3}' | tee "$PLAYLIST"
+  list_tracks "$TARGET_PATH" | while read timestamp size path ; do
+    echo "/$PODCASTS_ROOT/$path"
+  done | tee "$PLAYLIST"
 }
 
 check_if_mounted
