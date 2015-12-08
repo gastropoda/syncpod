@@ -18,6 +18,7 @@ SCRIPT_DIR=$(dirname $(readlink -f $0))
 . $SCRIPT_DIR/functions.sh
 
 check_if_mounted
+fill_simple_paths
 delete_deleted
 copy_downloaded
 update_playlist
